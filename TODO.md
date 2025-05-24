@@ -1,7 +1,8 @@
 - [ ] Project Settings 
 - [ ] Webcam Input
 - [ ] Webcam Output
-- [ ] Converter 
+- [x] Converter 
 - [ ] UI
 - [ ] Project Controlls
+- [ ] Switch to OpenCV
   

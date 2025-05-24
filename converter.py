@@ -6,15 +6,21 @@ from typing import List
 
 class Converter: 
     # TODO: Move to config file
-    ASCII_CHARACTERS = "$@B%8&WM*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,^`'. " # Character set used to generate ASCII image    
+    ASCII_CHARACTERS = "$@B%8&WM*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,^`'. " # Character set used to generate ASCII image    
     font_size = 12 # Size of the font on output image
-    
-    #TODO: Find better font 
-    font = ImageFont.load_default()
 
-    def __init__(self, new_image_width = 100):
+    #TODO: Move Font to config file
+    font_path = "./data/font/courier-normal.ttf" 
+    font_size = 12
+    font = ImageFont.truetype(font_path, font_size)
+
+    # TODO: Add all imputs to settings
+    def __init__(self, new_image_width = 100,contrast = 1,spacing = 0):
         self.new_image_width = new_image_width
-
+        self.contrast = contrast
+        self.ASCII_CHARACTERS = self.ASCII_CHARACTERS + " " * self.contrast
+        self.spacing = spacing
+        
     # Resize image 
     def resize_image(self, image: Image) -> Image:
         width, height = image.size
@@ -25,16 +31,14 @@ class Converter:
 
     # Convert image to grayscale
     def image_to_grayscale(self, image: Image) -> Image: 
-        return image.conver("L")
+        return image.convert("L")
         
     # Convert grayscale to ASCII
     def grayscale_to_ascii(self, image: Image) -> List[List[str]]:
         pixels = image.getdata()
-        characters_line = "".join([self.ASCII_CHARACTERS[pixel//(256/len(self.ASCII_CHARACTERS))] for pixel in pixels]) # Convert pixels to characters based on brightness
-        
-        # Convert 1D string list to 2D 
-        characters = [characters_line[i:i+self.new_image_width] for i in range(0, len(characters_line), self.new_image_width)]
-            
+        scale = len(self.ASCII_CHARACTERS) - 1
+        characters_line = "".join([self.ASCII_CHARACTERS[int(pixel / 255 * scale)] for pixel in pixels]) # Find the corresponding character by brightness
+        characters = [characters_line[i:i + self.new_image_width] for i in range(0, len(characters_line), self.new_image_width)] # Convert to 2D 
         return characters
 
     # Convert 2D list tp image
@@ -43,7 +47,12 @@ class Converter:
         height = len(image)
         
         # Output image dimentions 
-        char_width, char_height = self.font.getsize("A")  # approximate size of one character
+        mask = self.font.getmask("A")
+        char_width, char_height = mask.size
+
+        char_height += self.spacing
+        char_width += self.spacing
+
         img_width = width * char_width
         img_height = height * char_height
 
@@ -66,3 +75,4 @@ class Converter:
         ascii_matrix = self.grayscale_to_ascii(grayscale)
         ascii_image = self.ascii_to_Image(ascii_matrix)
         return ascii_image
+
